@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – RANA CAKE & BAKERY</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--red:#d62828;--red-d:#9e1a1a;--bg:#fff5f2;--line:#f3d3ce;--muted:#8a5a57;--ink:#4a0d11}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(160deg,#b31b1b,#7a0f16);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+header b{font-size:17px}
+.wrap{max-width:900px;margin:0 auto;padding:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:8px 16px;font:500 14px Poppins;cursor:pointer;color:var(--ink)}
+.tab.on{background:var(--red);border-color:var(--red);color:#fff}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.id{font-weight:600;font-size:16px}
+.badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:12px;background:#eee}
+.New{background:#ffe08a}.Accepted{background:#cfe6ff}.Ready{background:#c8f1d2}.Completed{background:#e8e8e8;color:#666}.Cancelled{background:#ffd3d3;color:#9e1a1a}
+.muted{color:var(--muted);font-size:13px}
+ul{margin:8px 0 8px 18px;font-size:14px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+button,.btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font:500 13px Poppins;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-block}
+.primary{background:var(--red);border-color:var(--red);color:#fff}
+.wa{background:#25d366;border-color:#25d366;color:#fff}
+input,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:12px;font:14px Poppins}
+textarea{min-height:110px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:500}
+.login{max-width:340px;margin:80px auto;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:20px;color:var(--red-d)}
+.hide{display:none}
+.msg{margin-top:10px;font-size:14px}
+</style>
+</head>
+<body>
+<header><b>🎂 RANA CAKE & BAKERY · Admin</b><button id="logout" class="hide" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)">Logout</button></header>
+
+<div class="login" id="loginBox">
+  <h3>Admin Login</h3>
+  <p class="muted" style="margin:6px 0 14px">Apna admin password daalein</p>
+  <input id="pw" type="password" placeholder="Password">
+  <button class="primary" id="loginBtn" style="width:100%;margin-top:10px;padding:12px">Login</button>
+  <div class="msg" id="loginErr" style="color:var(--red-d)"></div>
+</div>
+
+<div class="wrap hide" id="app">
+  <div class="stats" id="stats"></div>
+  <div class="tabs">
+    <button class="tab on" data-t="orders">📦 Orders</button>
+    <button class="tab" data-t="customers">👥 Customers</button>
+    <button class="tab" data-t="offer">📣 Offer Bhejein</button>
+  </div>
+  <div id="orders"></div>
+  <div id="customers" class="hide"></div>
+  <div id="offer" class="hide">
+    <div class="card">
+      <b>Offer message</b>
+      <p class="muted" style="margin:4px 0 10px">Sirf un customers ko jayega jinhone order karte waqt "offers chahiye" tick kiya tha.</p>
+      <textarea id="offerText" placeholder="Jaise: Is Sunday sabhi 1 kg cakes pe ₹50 off! Abhi order karein."></textarea>
+      <div class="btns">
+        <button class="primary" id="sendAll">🚀 Sabko bhejein (WhatsApp API)</button>
+      </div>
+      <div class="msg" id="offerMsg"></div>
+    </div>
+    <div class="card">
+      <b>Bina API ke: ek-ek karke bhejein (free)</b>
+      <p class="muted" style="margin:4px 0 10px">Har button dabane pe aapka WhatsApp khulega, message likha hoga, bas Send dabayein.</p>
+      <div id="oneByOne"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const rs = n => "₹" + Number(n).toLocaleString("en-IN");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let KEY = ""; try{ KEY = sessionStorage.getItem("k") || ""; }catch(_){}
+let orders = [], customers = [], knownIds = null, tab = "orders";
+
+async function api(path, opts = {}){
+  const r = await fetch(path, { ...opts, headers: { "Content-Type":"application/json", "x-admin-key": KEY, ...(opts.headers||{}) } });
+  const d = await r.json().catch(() => ({}));
+  if(r.status === 401){ logout(); throw new Error("Galat password"); }
+  if(!r.ok) throw new Error(d.error || "Error");
+  return d;
+}
+function beep(){
+  try{ const a = new (window.AudioContext||window.webkitAudioContext)(); [0,0.25,0.5].forEach(t => { const o=a.createOscillator(), g=a.createGain(); o.frequency.value=880; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(.3,a.currentTime+t); o.start(a.currentTime+t); o.stop(a.currentTime+t+.15); }); }catch(_){}
+}
+async function load(){
+  [orders, customers] = await Promise.all([api("/api/admin/orders"), api("/api/admin/customers")]);
+  const ids = new Set(orders.map(o => o.id));
+  if(knownIds && orders.some(o => !knownIds.has(o.id))){ beep(); document.title = "🔔 Naya order!"; setTimeout(()=>document.title="Admin – RANA CAKE & BAKERY", 8000); }
+  knownIds = ids;
+  render();
+}
+function render(){
+  const todayStr = new Date().toDateString();
+  const todays = orders.filter(o => new Date(o.createdAt).toDateString() === todayStr && o.status !== "Cancelled");
+  $("stats").innerHTML = `<div class="stat"><b>${todays.length}</b><span class="muted">Aaj ke orders</span></div>
+    <div class="stat"><b>${rs(todays.reduce((a,o)=>a+o.total,0))}</b><span class="muted">Aaj ki sale</span></div>
+    <div class="stat"><b>${customers.length}</b><span class="muted">Customers</span></div>`;
+
+  $("orders").innerHTML = orders.length ? orders.map(o => `
+    <div class="card">
+      <div class="top"><span class="id">${o.id} · ${rs(o.total)}</span><span class="badge ${o.status}">${o.status}</span></div>
+      <div class="muted">${new Date(o.createdAt).toLocaleString("en-IN")}</div>
+      <ul>${o.lines.map(l => `<li>${esc(l.name)} (${esc(l.size)}) × ${l.qty} = ${rs(l.amount)}</li>`).join("")}</ul>
+      <div>👤 <b>${esc(o.name)}</b> · 📞 <a href="tel:${o.phone}">${o.phone}</a></div>
+      <div>${o.mode === "Pickup" ? "🏪 Pickup" : "🛵 Delivery"}: <b>${esc(o.whenText)}</b></div>
+      ${o.address ? `<div>📍 ${esc(o.address)}</div>` : ""}
+      ${o.note ? `<div>📝 ${esc(o.note)}</div>` : ""}
+      <div class="btns">
+        ${["Accepted","Ready","Completed","Cancelled"].map(s => `<button data-o="${o.id}" data-s="${s}" ${o.status===s?"disabled":""}>${s}</button>`).join("")}
+        <a class="btn wa" target="_blank" href="https://wa.me/91${o.phone}?text=${encodeURIComponent(`Namaste ${o.name} ji, RANA CAKE & BAKERY se. Aapka order ${o.id} (${rs(o.total)}) confirm hai. 🙏`)}">💬 Customer ko WhatsApp</a>
+      </div>
+    </div>`).join("") : `<div class="card muted">Abhi koi order nahi aaya.</div>`;
+
+  $("customers").innerHTML = `<div class="card">
+      <div class="top"><b>${customers.length} customers · ${customers.filter(c=>c.offers).length} ko offers chahiye</b>
+      <a class="btn" href="/api/admin/customers.csv?key=${encodeURIComponent(KEY)}">⬇️ Excel (CSV) download</a></div>
+      <div style="overflow-x:auto;margin-top:10px"><table>
+      <tr><th>Naam</th><th>Mobile</th><th>Orders</th><th>Kharcha</th><th>Offers</th><th></th></tr>
+      ${customers.map(c => `<tr><td>${esc(c.name)}</td><td>${c.phone}</td><td>${c.orders}</td><td>${rs(c.spent)}</td>
+        <td><button data-c="${c.phone}" data-v="${c.offers?0:1}">${c.offers?"✅ Haan":"❌ Nahi"}</button></td>
+        <td><a class="btn wa" target="_blank" href="https://wa.me/91${c.phone}">💬</a></td></tr>`).join("")}
+      </table></div></div>`;
+  renderOneByOne();
+}
+function renderOneByOne(){
+  const text = $("offerText").value.trim();
+  const list = customers.filter(c => c.offers);
+  $("oneByOne").innerHTML = !list.length ? `<p class="muted">Abhi kisi customer ne offers ke liye haan nahi kaha.</p>` :
+    !text ? `<p class="muted">Upar offer message likhiye, phir yahan buttons aa jayenge.</p>` :
+    list.map(c => `<a class="btn wa" style="margin:4px" target="_blank" href="https://wa.me/91${c.phone}?text=${encodeURIComponent(`Namaste ${c.name} ji 🙏\n${text}\n\n– RANA CAKE & BAKERY\n(Offers band karne ke liye STOP likhein)`)}">${esc(c.name)} · ${c.phone}</a>`).join("");
+}
+document.body.addEventListener("click", async e => {
+  const t = e.target;
+  try{
+    if(t.dataset.t){ tab = t.dataset.t; document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b===t)); ["orders","customers","offer"].forEach(id => $(id).classList.toggle("hide", id!==tab)); }
+    if(t.dataset.o){ await api(`/api/admin/orders/${t.dataset.o}/status`, { method:"POST", body: JSON.stringify({ status: t.dataset.s }) }); await load(); }
+    if(t.dataset.c){ await api(`/api/admin/customers/${t.dataset.c}/offers`, { method:"POST", body: JSON.stringify({ offers: t.dataset.v==="1" }) }); await load(); }
+  }catch(err){ /* shown on next load */ }
+});
+$("offerText").oninput = renderOneByOne;
+$("sendAll").onclick = async () => {
+  const message = $("offerText").value.trim(), m = $("offerMsg");
+  if(!message){ m.textContent = "Pehle message likhiye."; return; }
+  $("sendAll").disabled = true; m.textContent = "Bhej rahe hain…";
+  try{ const d = await api("/api/admin/broadcast", { method:"POST", body: JSON.stringify({ message }) }); m.textContent = `✅ ${d.ok} ko gaya, ${d.fail} fail (kul ${d.total}).`; }
+  catch(err){ m.textContent = "❌ " + err.message; }
+  $("sendAll").disabled = false;
+};
+async function login(){
+  KEY = $("pw").value; $("loginErr").textContent = "";
+  try{ await load(); try{ sessionStorage.setItem("k", KEY); }catch(_){}
+    $("loginBox").classList.add("hide"); $("app").classList.remove("hide"); $("logout").classList.remove("hide"); }
+  catch(err){ $("loginErr").textContent = err.message; }
+}
+function logout(){ KEY = ""; try{ sessionStorage.removeItem("k"); }catch(_){} $("app").classList.add("hide"); $("loginBox").classList.remove("hide"); $("logout").classList.add("hide"); }
+$("loginBtn").onclick = login;
+$("pw").onkeydown = e => { if(e.key === "Enter") login(); };
+$("logout").onclick = logout;
+if(KEY){ $("pw").value = KEY; login(); }
+setInterval(() => { if(KEY && !$("app").classList.contains("hide")) load().catch(()=>{}); }, 15000);
+</script>
+</body>
+</html>

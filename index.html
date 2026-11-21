@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RANA CAKE &amp; BAKERY – Menu &amp; Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#fff5f2; --paper:#ffffff; --choco:#5c0f14; --choco2:#8f1d24;
+  --berry:#d62828; --berry-d:#b31b1b; --gold:#ffc93c; --line:#f6d4cf; --muted:#8a5a57;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,system-ui,sans-serif;background:var(--cream);color:var(--choco);padding-bottom:110px;-webkit-tap-highlight-color:transparent}
+header{background:linear-gradient(160deg,#b31b1b 0%,#7a0f16 100%);color:#fff;padding:28px 20px 56px;text-align:center;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:30px;background:var(--cream);border-radius:50% 50% 0 0/100% 100% 0 0}
+.logo{font-size:40px}
+.jss{display:inline-block;font-family:Fraunces,serif;font-weight:800;letter-spacing:3px;font-size:13px;color:var(--gold);border:1.5px solid rgba(255,201,60,.6);border-radius:20px;padding:4px 14px;margin-bottom:10px}
+h1{font-family:Fraunces,serif;font-weight:800;font-size:34px;letter-spacing:.3px;margin-top:4px}
+.tag{opacity:.85;font-size:14px;margin-top:4px}
+.info{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.chip{background:rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:12px}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+.tabs{position:sticky;top:0;z-index:5;background:var(--cream);display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none;max-width:760px;margin:0 auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:1.5px solid var(--line);background:var(--paper);color:var(--choco);border-radius:22px;padding:8px 16px;font:500 14px Poppins;cursor:pointer}
+.tab.on{background:var(--berry);border-color:var(--berry);color:#fff}
+.search{width:100%;margin:4px 0 14px;padding:12px 16px;border:1.5px solid var(--line);border-radius:14px;font:15px Poppins;background:var(--paper);color:var(--choco)}
+h2{font-family:Fraunces,serif;font-size:22px;margin:18px 0 10px}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center}
+.emo{flex:none;width:68px;height:68px;border-radius:16px;display:grid;place-items:center;font-size:38px;background:linear-gradient(135deg,#ffe3df,#ffc9c2)}
+.meta{flex:1;min-width:0}
+.name{font-weight:600;font-size:15px;line-height:1.3}
+.desc{font-size:12.5px;color:var(--muted);margin:2px 0 6px;line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.price{font-weight:600;color:var(--berry-d)}
+.price small{font-weight:400;color:var(--muted);font-size:11px}
+.veg{display:inline-block;width:12px;height:12px;border:1.5px solid #2e8b47;border-radius:2px;position:relative;margin-right:4px;vertical-align:-1px}
+.veg::after{content:"";position:absolute;inset:2px;border-radius:50%;background:#2e8b47}
+.egg{border-color:#b5651d}.egg::after{background:#b5651d}
+.add{border:0;background:var(--berry);color:#fff;font:600 13px Poppins;padding:7px 16px;border-radius:10px;cursor:pointer}
+.qty{display:flex;align-items:center;background:var(--berry);border-radius:10px;color:#fff}
+.qty button{border:0;background:none;color:#fff;font:600 17px Poppins;width:32px;height:32px;cursor:pointer}
+.qty span{min-width:20px;text-align:center;font-weight:600;font-size:14px}
+.soldout{font-size:12px;color:var(--muted);font-weight:500}
+.empty{text-align:center;color:var(--muted);padding:30px 0}
+.bar{position:fixed;left:12px;right:12px;bottom:14px;max-width:736px;margin:0 auto;background:var(--berry-d);color:#fff;border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(120,15,22,.35);transform:translateY(140%);transition:.25s;z-index:10;cursor:pointer}
+.bar.show{transform:none}
+.bar b{font-size:16px}
+.bar .go{background:var(--gold);color:var(--choco);font-weight:600;padding:9px 16px;border-radius:12px;font-size:14px}
+.sheet-bg{position:fixed;inset:0;background:rgba(40,20,10,.5);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+.sheet-bg.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;background:var(--paper);border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:.28s;z-index:21;padding:18px 18px 28px}
+.sheet.show{transform:none}
+.grab{width:44px;height:5px;background:var(--line);border-radius:3px;margin:0 auto 12px}
+.sheet h3{font-family:Fraunces,serif;font-size:22px;display:flex;justify-content:space-between;align-items:center}
+.x{border:0;background:var(--cream);width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--choco)}
+.line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);gap:10px;font-size:14px}
+.tot{display:flex;justify-content:space-between;font-weight:600;font-size:17px;padding:12px 0}
+label{display:block;font-size:13px;font-weight:500;margin:12px 0 5px}
+input,textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:12px;font:14px Poppins;background:#fff;color:var(--choco)}
+textarea{resize:vertical;min-height:60px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:11px;border:1.5px solid var(--line);background:#fff;border-radius:12px;font:500 14px Poppins;cursor:pointer;color:var(--choco)}
+.seg button.on{border-color:var(--berry);background:#ffe9e6;color:var(--berry-d)}
+.err{color:var(--berry-d);font-size:13px;margin-top:10px;min-height:18px}
+.wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;background:#25d366;color:#fff;text-decoration:none;font:600 16px Poppins;padding:14px;border-radius:14px;border:0;cursor:pointer}
+.alt{margin-top:12px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.5}
+.copy{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 14px;font:500 13px Poppins;cursor:pointer;color:var(--choco);margin-top:6px}
+.done{text-align:center;padding:20px 0}
+.done .big{font-size:56px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
+.chk{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.4;cursor:pointer}
+.chk input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--berry)}
+.confirm{width:100%;margin-top:8px;background:var(--berry);color:#fff;font:600 16px Poppins;padding:15px;border-radius:14px;border:0;cursor:pointer}
+.confirm:disabled{opacity:.6}
+.wa-sm{display:inline-flex;gap:6px;align-items:center;background:#25d366;color:#fff;text-decoration:none;font:600 14px Poppins;padding:10px 16px;border-radius:12px;margin-top:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="jss" id="bless">🙏 JAI SHREE SHYAM 🙏</div>
+  <div class="logo">🎂</div>
+  <h1 id="shopName"></h1>
+  <div class="tag" id="shopTag"></div>
+  <div class="info" id="shopInfo"></div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+<div class="wrap">
+  <input class="search" id="q" placeholder="🔍  Search karein… (jaise chocolate, vanilla)">
+  <div id="menu"></div>
+  <footer>Order milte hi bakery aapse contact karegi</footer>
+</div>
+
+<div class="bar" id="bar">
+  <div><div id="barCount" style="font-size:12px;opacity:.85"></div><b id="barTotal"></b></div>
+  <div class="go">Order / Book karein →</div>
+</div>
+
+<div class="sheet-bg" id="bg"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <div id="sheetBody"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const rs = n => "₹" + n.toLocaleString("en-IN");
+let SHOP = {}, ITEMS = [], MENU = [];
+const cart = {};
+let activeCat = "All", mode = "Pickup", cats = [];
+const form = {name:"", phone:"", date:"", time:"", address:"", note:"", offers:true};
+
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+fetch("/api/menu").then(r => r.json()).then(data => {
+  SHOP = data.shop; ITEMS = data.items;
+  ITEMS.forEach((it, g) => it.sizes.forEach(([unit, price]) => MENU.push({...it, g, unit, price})));
+  cats = ["All", ...new Set(ITEMS.map(m => m.cat))];
+  $("shopName").textContent = SHOP.name;
+  $("shopTag").textContent = SHOP.tagline;
+  if (SHOP.blessing) $("bless").textContent = "🙏 " + SHOP.blessing + " 🙏"; else $("bless").remove();
+  $("shopInfo").innerHTML = (SHOP.timing?`<span class="chip">🕘 ${esc(SHOP.timing)}</span>`:"") + (SHOP.address?`<span class="chip">📍 ${esc(SHOP.address)}</span>`:"") + `<span class="chip">📞 ${esc(SHOP.phone)}</span>`;
+  document.title = SHOP.name + " – Menu & Order";
+  renderTabs(); renderMenu(); updateBar();
+}).catch(() => { $("menu").innerHTML = `<div class="empty">Menu load nahi hua. Page refresh karein.</div>`; });
+
+function renderTabs(){ $("tabs").innerHTML = cats.map(c => `<button class="tab ${c===activeCat?"on":""}" data-c="${c}">${c}</button>`).join(""); }
+$("tabs").onclick = e => { const c = e.target.dataset.c; if(!c) return; activeCat = c; renderTabs(); renderMenu(); window.scrollTo({top:$("tabs").offsetTop,behavior:"smooth"}); };
+
+function ctrl(i){
+  const m = MENU[i];
+  if(m.stock === false) return `<span class="soldout">Sold out</span>`;
+  const q = cart[i] || 0;
+  return q ? `<div class="qty"><button data-i="${i}" data-d="-1">−</button><span>${q}</span><button data-i="${i}" data-d="1">+</button></div>`
+           : `<button class="add" data-i="${i}" data-d="1">ADD</button>`;
+}
+function renderMenu(){
+  const q = $("q").value.trim().toLowerCase();
+  let html = "";
+  for(const c of cats.slice(1)){
+    if(activeCat !== "All" && activeCat !== c) continue;
+    const items = ITEMS.map((m,g)=>({m,g})).filter(({m}) => m.cat===c && (!q || (m.name+" "+m.desc).toLowerCase().includes(q)));
+    if(!items.length) continue;
+    html += `<h2>${c}</h2><div class="grid">` + items.map(({m,g}) => `
+      <div class="card" style="${m.stock===false?"opacity:.6":""}">
+        <div class="emo">${m.emoji}</div>
+        <div class="meta">
+          <div class="name">${esc(m.name)}</div>
+          <div class="desc">${esc(m.desc)}</div>
+          ${MENU.map((v,i)=>({v,i})).filter(({v})=>v.g===g).map(({v,i}) =>
+            `<div class="row" style="margin-top:6px"><span class="price">${rs(v.price)} <small>/ ${esc(v.unit)}</small></span><span id="c${i}">${ctrl(i)}</span></div>`).join("")}
+        </div>
+      </div>`).join("") + `</div>`;
+  }
+  $("menu").innerHTML = html || `<div class="empty">Kuch nahi mila 🙁</div>`;
+}
+function change(i, d){
+  cart[i] = Math.max(0, (cart[i]||0) + d);
+  if(!cart[i]) delete cart[i];
+  const el = $("c"+i); if(el) el.innerHTML = ctrl(i);
+  updateBar();
+  if($("sheet").classList.contains("show")) renderSheet();
+}
+document.body.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if(b) change(+b.dataset.i, +b.dataset.d); });
+function totals(){ let n=0, t=0; for(const i in cart){ n+=cart[i]; t+=cart[i]*MENU[i].price; } return {n,t}; }
+function updateBar(){
+  const {n,t} = totals();
+  $("bar").classList.toggle("show", n>0);
+  $("barCount").textContent = n + " item" + (n>1?"s":"");
+  $("barTotal").textContent = rs(t);
+}
+function today(){ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+
+function renderSheet(){
+  const {n,t} = totals();
+  if(!n){ closeSheet(); return; }
+  const lines = Object.keys(cart).map(i => `
+    <div class="line"><div style="flex:1">${MENU[i].emoji} ${esc(MENU[i].name)}<div class="desc" style="margin:0">${rs(MENU[i].price)} / ${esc(MENU[i].unit)}</div></div>
+    <div class="qty"><button data-i="${i}" data-d="-1">−</button><span>${cart[i]}</span><button data-i="${i}" data-d="1">+</button></div>
+    <b style="min-width:60px;text-align:right">${rs(cart[i]*MENU[i].price)}</b></div>`).join("");
+  $("sheetBody").innerHTML = `
+    <h3>Aapka Order <button class="x" id="close">✕</button></h3>
+    ${lines}
+    <div class="tot"><span>Total</span><span>${rs(t)}</span></div>
+    <label>Kaise lenge?</label>
+    <div class="seg"><button data-m="Pickup" class="${mode==="Pickup"?"on":""}">🏪 Shop se Pickup</button><button data-m="Home Delivery" class="${mode!=="Pickup"?"on":""}">🛵 Home Delivery</button></div>
+    <div class="two">
+      <div><label>Naam *</label><input id="f_name" value="${esc(form.name)}" placeholder="Aapka naam"></div>
+      <div><label>Mobile *</label><input id="f_phone" value="${esc(form.phone)}" inputmode="numeric" maxlength="10" placeholder="10 digit"></div>
+    </div>
+    <div class="two">
+      <div><label>Date *</label><input id="f_date" type="date" min="${today()}" value="${form.date}"></div>
+      <div><label>Time *</label><input id="f_time" type="time" value="${form.time}"></div>
+    </div>
+    ${mode!=="Pickup" ? `<label>Delivery address *</label><textarea id="f_address" placeholder="House no, area, landmark">${esc(form.address)}</textarea>`:""}
+    <label>Note (cake message, candle number, balloon colour, drink flavour)</label>
+    <input id="f_note" value="${esc(form.note)}" placeholder='Jaise "Happy Birthday Riya", candle 5, red balloons'>
+    <label class="chk"><input type="checkbox" id="f_offers" ${form.offers?"checked":""}> <span>Haan, mujhe ${esc(SHOP.name)} ke offers aur updates WhatsApp pe chahiye</span></label>
+    <div class="err" id="err"></div>
+    <button class="confirm" id="confirm">✅ Order Confirm Karein · ${rs(t)}</button>`;
+  $("close").onclick = closeSheet;
+  $("sheetBody").querySelectorAll("[data-m]").forEach(b => b.onclick = () => { save(); mode = b.dataset.m; renderSheet(); });
+  $("confirm").onclick = submit;
+}
+function save(){
+  for(const k of ["name","phone","date","time","address","note"]){ const el=$("f_"+k); if(el) form[k]=el.value.trim(); }
+  const o=$("f_offers"); if(o) form.offers=o.checked;
+}
+async function submit(){
+  save();
+  const err = $("err"), btn = $("confirm");
+  if(!form.name) return err.textContent = "Kripya apna naam likhein.";
+  if(!/^[6-9]\d{9}$/.test(form.phone)) return err.textContent = "Sahi 10-digit mobile number daalein.";
+  if(!form.date || !form.time) return err.textContent = "Date aur time chunein.";
+  if(mode!=="Pickup" && !form.address) return err.textContent = "Delivery address likhein.";
+  err.textContent = ""; btn.disabled = true; btn.textContent = "Order bhej rahe hain…";
+  try{
+    const r = await fetch("/api/order", { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ ...form, mode, items: Object.keys(cart).map(i => ({ id: MENU[i].id, size: MENU[i].unit, qty: cart[i] })) }) });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || "Order nahi gaya");
+    showDone(d);
+  }catch(e){
+    err.textContent = e.message || "Network problem, dobara try karein.";
+    btn.disabled = false; btn.textContent = "✅ Order Confirm Karein";
+  }
+}
+function showDone(d){
+  const msg = `Namaste, maine order ${d.id} kiya hai (${rs(d.total)}).`;
+  for(const k in cart) delete cart[k];
+  updateBar(); renderMenu();
+  $("sheetBody").innerHTML = `<div class="done">
+    <div class="big">🎉</div>
+    <h3 style="justify-content:center">Order mil gaya!</h3>
+    <p style="margin-top:8px">Aapka order number <b>${d.id}</b> hai.<br>Total: <b>${rs(d.total)}</b></p>
+    <p class="alt">${esc(SHOP.name)} jaldi aapko call ya WhatsApp karke confirm karegi.</p>
+    <a class="wa-sm" href="https://wa.me/91${SHOP.phone}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Bakery ko WhatsApp karein</a><br>
+    <button class="copy" id="ok" style="margin-top:14px">Theek hai</button></div>`;
+  $("ok").onclick = closeSheet;
+}
+function openSheet(){ renderSheet(); $("bg").classList.add("show"); $("sheet").classList.add("show"); }
+function closeSheet(){ save(); $("bg").classList.remove("show"); $("sheet").classList.remove("show"); }
+$("bar").onclick = openSheet;
+$("bg").onclick = closeSheet;
+$("q").oninput = renderMenu;
+</script>
+</body>
+</html>
