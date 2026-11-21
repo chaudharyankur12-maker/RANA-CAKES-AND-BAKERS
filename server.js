@@ -42,6 +42,41 @@ const loadMenu = () => JSON.parse(fs.readFileSync(path.join(__dirname, "menu.jso
 let orders = loadJSON(ORDERS_FILE, []);
 let customers = loadJSON(CUSTOMERS_FILE, {});   // phone -> customer
 
+/* ---------- Supabase (free online database) ----------
+   SUPABASE_URL aur SUPABASE_KEY set hain to data wahan save hota hai,
+   warna data/ folder ki files mein. */
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+const SB_KEY = process.env.SUPABASE_KEY || "";
+const useDB = !!(SB_URL && SB_KEY);
+function sbHeaders(extra = {}) {
+  const h = { apikey: SB_KEY, "Content-Type": "application/json", ...extra };
+  if (SB_KEY.startsWith("eyJ")) h.Authorization = `Bearer ${SB_KEY}`;
+  return h;
+}
+async function sb(pathq, opts = {}) {
+  const r = await fetch(`${SB_URL}/rest/v1/${pathq}`, { ...opts, headers: sbHeaders(opts.headers) });
+  const t = await r.text();
+  if (!r.ok) throw new Error(`Supabase ${r.status}: ${t.slice(0, 300)}`);
+  return t ? JSON.parse(t) : null;
+}
+async function loadFromDB() {
+  const o = await sb("orders?select=data&order=created_at.asc");
+  const c = await sb("customers?select=data");
+  orders = o.map(r => r.data);
+  customers = Object.fromEntries(c.map(r => [r.data.phone, r.data]));
+  console.log(`🗄️  Supabase se ${orders.length} orders aur ${c.length} customers load hue`);
+}
+async function saveOrder(o) {
+  if (!useDB) return saveJSON(ORDERS_FILE, orders);
+  await sb("orders", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ id: o.id, data: o, created_at: o.createdAt }) });
+}
+async function saveCustomer(c) {
+  if (!useDB) return saveJSON(CUSTOMERS_FILE, customers);
+  await sb("customers", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ phone: c.phone, data: c }) });
+}
+
 const rs = n => "₹" + Number(n).toLocaleString("en-IN");
 const clean = (s, max = 300) => String(s ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
 
@@ -125,6 +160,12 @@ app.use(express.json({ limit: "50kb" }));
 
 app.get("/api/menu", (req, res) => res.json(loadMenu()));
 
+// UptimeRobot isse har 5 minute check karega – server bhi jaagta rahega aur database bhi
+app.get("/api/health", async (req, res) => {
+  try { if (useDB) await sb("customers?select=phone&limit=1"); res.json({ ok: true, db: useDB }); }
+  catch (e) { res.status(500).json({ ok: false }); }
+});
+
 // spam rokne ke liye: ek IP se 10 minute mein max 8 order
 const hits = new Map();
 function rateLimit(req, res, next) {
@@ -168,13 +209,16 @@ app.post("/api/order", rateLimit, async (req, res) => {
   const id = "R-" + (1001 + orders.length);
   const order = { id, createdAt: new Date().toISOString(), status: "New", name, phone, mode, address, note, when: when.toISOString(), whenText, lines: lines.map(({ advance, ...l }) => l), total };
 
-  orders.push(order); saveJSON(ORDERS_FILE, orders);
+  orders.push(order);
+  try { await saveOrder(order); }
+  catch (e) { orders.pop(); console.error(e.message); return res.status(500).json({ error: "Order save nahi hua, dobara try karein." }); }
 
   // Customer list update
   const c = customers[phone] || { phone, firstOrder: order.createdAt, orders: 0, spent: 0, offers: false };
   c.name = name; c.orders += 1; c.spent += total; c.lastOrder = order.createdAt;
   if (b.offers === true) { c.offers = true; c.optInAt = c.optInAt || order.createdAt; }
-  customers[phone] = c; saveJSON(CUSTOMERS_FILE, customers);
+  customers[phone] = c;
+  try { await saveCustomer(c); } catch (e) { console.error(e.message); }
 
   const sent = await notifyOwner(order, menu.shop.name);
   res.json({ ok: true, id, total, notified: sent });
@@ -188,18 +232,21 @@ function admin(req, res, next) {
   next();
 }
 app.get("/api/admin/orders", admin, (req, res) => res.json(orders.slice().reverse()));
-app.post("/api/admin/orders/:id/status", admin, (req, res) => {
+app.post("/api/admin/orders/:id/status", admin, async (req, res) => {
   const o = orders.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ error: "Order nahi mila" });
   if (!["New", "Accepted", "Ready", "Completed", "Cancelled"].includes(req.body.status)) return res.status(400).json({ error: "Galat status" });
-  o.status = req.body.status; saveJSON(ORDERS_FILE, orders); res.json(o);
+  o.status = req.body.status;
+  try { await saveOrder(o); } catch (e) { return res.status(500).json({ error: e.message }); }
+  res.json(o);
 });
 app.get("/api/admin/customers", admin, (req, res) =>
   res.json(Object.values(customers).sort((a, b) => (b.lastOrder || "").localeCompare(a.lastOrder || ""))));
-app.post("/api/admin/customers/:phone/offers", admin, (req, res) => {
+app.post("/api/admin/customers/:phone/offers", admin, async (req, res) => {
   const c = customers[req.params.phone]; if (!c) return res.status(404).json({ error: "Customer nahi mila" });
   c.offers = !!req.body.offers; if (!c.offers) c.optOutAt = new Date().toISOString();
-  saveJSON(CUSTOMERS_FILE, customers); res.json(c);
+  try { await saveCustomer(c); } catch (e) { return res.status(500).json({ error: e.message }); }
+  res.json(c);
 });
 app.get("/api/admin/customers.csv", (req, res, next) => { req.headers["x-admin-key"] = req.query.key || ""; next(); }, admin, (req, res) => {
   const rows = [["Name", "Phone", "Orders", "Total Spent", "Offers OK", "First Order", "Last Order"]];
@@ -227,4 +274,10 @@ app.post("/api/admin/broadcast", admin, async (req, res) => {
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "public", "admin.html")));
 
-app.listen(PORT, () => console.log(`✅ Server chal raha hai: http://localhost:${PORT}   (admin: /admin)`));
+(async () => {
+  if (useDB) {
+    try { await loadFromDB(); }
+    catch (e) { console.error("❌ Supabase se connect nahi hua:", e.message); process.exit(1); }
+  } else console.log("ℹ️  Supabase set nahi hai – data, data/ folder mein save hoga.");
+  app.listen(PORT, () => console.log(`✅ Server chal raha hai: http://localhost:${PORT}   (admin: /admin)`));
+})();
