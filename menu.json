@@ -1,0 +1,32 @@
+{
+  "shop": {
+    "name": "RANA CAKE & BAKERY",
+    "blessing": "JAI SHREE SHYAM",
+    "tagline": "Cakes · Pastries · Party items · Cold drinks",
+    "phone": "9873562718",
+    "timing": "",
+    "address": "Behind Gandhi Smarak School, Sector 22, Noida 201301",
+    "minAdvanceHours": 4
+  },
+  "items": [
+    {"id": "choco-cake",   "cat": "Cakes",       "emoji": "🎂", "name": "Chocolate Cake",          "desc": "Soft chocolate sponge with chocolate cream", "sizes": [["½ kg", 280], ["1 kg", 550]], "advance": true},
+    {"id": "vanilla-cake", "cat": "Cakes",       "emoji": "🍦", "name": "Vanilla Cake",            "desc": "Classic vanilla cream cake",                 "sizes": [["½ kg", 220], ["1 kg", 440]], "advance": true},
+    {"id": "straw-cake",   "cat": "Cakes",       "emoji": "🍓", "name": "Strawberry Cake",         "desc": "Strawberry cream cake",                      "sizes": [["½ kg", 220], ["1 kg", 440]], "advance": true},
+    {"id": "bscotch-cake", "cat": "Cakes",       "emoji": "🍯", "name": "Butterscotch Cake",       "desc": "Butterscotch cream with crunchy praline",    "sizes": [["½ kg", 220], ["1 kg", 440]], "advance": true},
+
+    {"id": "choco-pastry",   "cat": "Pastries", "emoji": "🍫", "name": "Chocolate Pastry",    "desc": "Chocolate pastry slice",   "sizes": [["pc", 30]]},
+    {"id": "vanilla-pastry", "cat": "Pastries", "emoji": "🍰", "name": "Vanilla Pastry",      "desc": "Vanilla cream pastry",     "sizes": [["pc", 25]]},
+    {"id": "straw-pastry",   "cat": "Pastries", "emoji": "🍓", "name": "Strawberry Pastry",   "desc": "Strawberry cream pastry",  "sizes": [["pc", 25]]},
+    {"id": "bscotch-pastry", "cat": "Pastries", "emoji": "🍯", "name": "Butterscotch Pastry", "desc": "Butterscotch cream pastry","sizes": [["pc", 25]]},
+
+    {"id": "num-candle",   "cat": "Party Items", "emoji": "🕯️", "name": "Number Candle",            "desc": "Kaunsa number chahiye, note mein likhein",  "sizes": [["pc", 25]]},
+    {"id": "popper",       "cat": "Party Items", "emoji": "🎉", "name": "Party Popper",             "desc": "Small aur Big size",                        "sizes": [["Small", 65], ["Big", 120]]},
+    {"id": "balloon-mix",  "cat": "Party Items", "emoji": "🎈", "name": "Balloons – Colourful",     "desc": "Mixed colours",                             "sizes": [["50 pcs", 100], ["Small packet", 60]]},
+    {"id": "balloon-one",  "cat": "Party Items", "emoji": "🔴", "name": "Balloons – Single Colour", "desc": "Kaunsa colour chahiye, note mein likhein",  "sizes": [["50 pcs", 100], ["Small packet", 60]]},
+
+    {"id": "sting",      "cat": "Drinks", "emoji": "⚡", "name": "Sting",      "desc": "Energy drink",                              "sizes": [["bottle", 20]]},
+    {"id": "hell",       "cat": "Drinks", "emoji": "🔥", "name": "Hell",       "desc": "Energy drink",                              "sizes": [["can", 60]]},
+    {"id": "diet-coke",  "cat": "Drinks", "emoji": "🥤", "name": "Diet Coke",  "desc": "Chilled",                                   "sizes": [["Regular", 30], ["Big", 60]]},
+    {"id": "cold-drink", "cat": "Drinks", "emoji": "🧃", "name": "Cold Drink", "desc": "Kaunsa flavour chahiye, note mein likhein",  "sizes": [["½ ltr", 40], ["Full bottle", 90]]}
+  ]
+}
