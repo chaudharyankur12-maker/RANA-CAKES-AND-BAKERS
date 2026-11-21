@@ -27,6 +27,7 @@ const WA_ORDER_TEMPLATE = process.env.WA_ORDER_TEMPLATE || "new_order";
 const WA_OFFER_TEMPLATE = process.env.WA_OFFER_TEMPLATE || "bakery_offer";
 const WA_LANG = process.env.WA_TEMPLATE_LANG || "en";
 const WA_VERSION = process.env.WA_API_VERSION || "v23.0";
+const PUBLIC_URL = (process.env.PUBLIC_URL || "").replace(/\/+$/, "");   // jaise https://rana-bakery.onrender.com
 
 if (!ADMIN_PASSWORD) console.warn("⚠️  ADMIN_PASSWORD set nahi hai – admin page band rahega.");
 
@@ -82,11 +83,26 @@ function orderText(o, shopName) {
   s += `\nTotal: ${rs(o.total)}\n\n👤 ${o.name}\n📞 ${o.phone}\n${o.mode === "Pickup" ? "🏪 Pickup" : "🛵 Delivery"}: ${o.whenText}\n`;
   if (o.address) s += `📍 ${o.address}\n`;
   if (o.note) s += `📝 ${o.note}\n`;
+  if (PUBLIC_URL) s += `\n👉 Order manage karein: ${PUBLIC_URL}/admin\n`;
   return s;
+}
+
+// CallMeBot: apne hi WhatsApp number pe alert (aasaan setup)
+const CMB_PHONE = process.env.CALLMEBOT_PHONE || "";   // jaise 919873562718
+const CMB_KEY = process.env.CALLMEBOT_APIKEY || "";
+async function sendCallMeBot(text) {
+  if (!CMB_PHONE || !CMB_KEY) return false;
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent("+" + CMB_PHONE.replace(/\D/g, ""))}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(CMB_KEY)}`;
+  const r = await fetch(url);
+  const body = await r.text();
+  if (!r.ok || /error|invalid/i.test(body.slice(0, 300))) throw new Error("CallMeBot: " + body.replace(/<[^>]+>/g, " ").slice(0, 200));
+  return true;
 }
 
 async function notifyOwner(o, shopName) {
   const results = [];
+  try { if (await sendCallMeBot(orderText(o, shopName))) results.push("callmebot"); }
+  catch (e) { console.error(e.message); }
   try { if (await sendTelegram(orderText(o, shopName))) results.push("telegram"); }
   catch (e) { console.error(e.message); }
   try {
