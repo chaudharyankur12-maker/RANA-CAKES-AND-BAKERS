@@ -227,7 +227,13 @@ app.post("/api/order", rateLimit, async (req, res) => {
   try { await saveCustomer(c); } catch (e) { console.error(e.message); }
 
   const sent = await notifyOwner(order, menu.shop.name);
-  res.json({ ok: true, id, total, notified: sent });
+  // Customer ke WhatsApp se bakery ko jaane wala message (customer bas Send dabata hai)
+  let waText = `🧁 *New Order ${order.id} – ${menu.shop.name}*\n\n`;
+  for (const l of order.lines) waText += `• ${l.name} (${l.size}) × ${l.qty} = ${rs(l.amount)}\n`;
+  waText += `\n*Total: ${rs(order.total)}*\n\n👤 ${order.name}\n📞 ${order.phone}\n${order.mode === "Pickup" ? "🏪 Pickup" : "🛵 Delivery"}: ${order.whenText}\n`;
+  if (order.address) waText += `📍 ${order.address}\n`;
+  if (order.note) waText += `📝 ${order.note}\n`;
+  res.json({ ok: true, id, total, notified: sent, waText, waTo: "91" + String(menu.shop.phone).replace(/\D/g, "").slice(-10) });
 });
 
 /* ---------- Admin ---------- */
