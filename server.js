@@ -166,14 +166,20 @@ app.get("/api/health", async (req, res) => {
   catch (e) { res.status(500).json({ ok: false }); }
 });
 
-// spam rokne ke liye: ek IP se 10 minute mein max 8 order
+// spam rokne ke liye: ek customer (IP + mobile) se 10 minute mein max 15 order
 const hits = new Map();
-function rateLimit(req, res, next) {
-  const now = Date.now(), ip = req.ip;
-  const arr = (hits.get(ip) || []).filter(t => now - t < 10 * 60e3);
-  if (arr.length >= 8) return res.status(429).json({ error: "Bahut zyada orders. Thodi der baad try karein." });
-  arr.push(now); hits.set(ip, arr); next();
+function clientIp(req) {
+  const xf = (req.get("x-forwarded-for") || "").split(",")[0].trim();
+  return xf || req.socket.remoteAddress || "";
 }
+function rateLimit(req, res, next) {
+  const now = Date.now();
+  const key = clientIp(req) + "|" + String((req.body && req.body.phone) || "");
+  const arr = (hits.get(key) || []).filter(t => now - t < 10 * 60e3);
+  if (arr.length >= 15) return res.status(429).json({ error: "Bahut zyada orders. 10 minute baad try karein." });
+  arr.push(now); hits.set(key, arr); next();
+}
+setInterval(() => { const now = Date.now(); for (const [k, a] of hits) if (!a.some(t => now - t < 10 * 60e3)) hits.delete(k); }, 30 * 60e3).unref();
 
 app.post("/api/order", rateLimit, async (req, res) => {
   const menu = loadMenu();
@@ -231,6 +237,22 @@ function admin(req, res, next) {
   if (!ADMIN_PASSWORD || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(401).json({ error: "Galat password" });
   next();
 }
+// Admin page se test alert – batata hai ki WhatsApp/Telegram kyun nahi ja raha
+app.post("/api/admin/test-alert", admin, async (req, res) => {
+  const text = "✅ Test alert – RANA CAKE & BAKERY ka server WhatsApp bhej pa raha hai.";
+  const out = {};
+  if (!CMB_PHONE || !CMB_KEY) out.callmebot = "Set nahi hai: Render Environment mein CALLMEBOT_PHONE aur CALLMEBOT_APIKEY dono daalein.";
+  else {
+    try {
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent("+" + CMB_PHONE.replace(/\D/g, ""))}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(CMB_KEY)}`;
+      const r = await fetch(url);
+      const body = (await r.text()).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+      out.callmebot = `Phone: +${CMB_PHONE.replace(/\D/g, "")} | Jawab (${r.status}): ${body}`;
+    } catch (e) { out.callmebot = "Error: " + e.message; }
+  }
+  if (TG_TOKEN && TG_CHAT) { try { await sendTelegram(text); out.telegram = "Bhej diya"; } catch (e) { out.telegram = e.message; } }
+  res.json(out);
+});
 app.get("/api/admin/orders", admin, (req, res) => res.json(orders.slice().reverse()));
 app.post("/api/admin/orders/:id/status", admin, async (req, res) => {
   const o = orders.find(x => x.id === req.params.id);
