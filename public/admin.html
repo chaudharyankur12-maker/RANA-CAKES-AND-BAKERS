@@ -52,6 +52,10 @@ th{font-size:12px;color:var(--muted);font-weight:500}
 
 <div class="wrap hide" id="app">
   <div class="stats" id="stats"></div>
+  <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="wa" id="testAlert">🔔 Test WhatsApp Alert</button>
+    <span class="muted" id="testMsg">Dabane pe bakery ke WhatsApp pe test message jayega</span>
+  </div>
   <div class="tabs">
     <button class="tab on" data-t="orders">📦 Orders</button>
     <button class="tab" data-t="customers">👥 Customers</button>
@@ -157,6 +161,12 @@ $("sendAll").onclick = async () => {
   try{ const d = await api("/api/admin/broadcast", { method:"POST", body: JSON.stringify({ message }) }); m.textContent = `✅ ${d.ok} ko gaya, ${d.fail} fail (kul ${d.total}).`; }
   catch(err){ m.textContent = "❌ " + err.message; }
   $("sendAll").disabled = false;
+};
+$("testAlert").onclick = async () => {
+  const m = $("testMsg"); m.textContent = "Bhej rahe hain…";
+  try{ const d = await api("/api/admin/test-alert", { method:"POST", body:"{}" });
+    m.textContent = Object.entries(d).map(([k,v]) => k + ": " + v).join("  •  ") || "Koi alert set nahi hai"; }
+  catch(err){ m.textContent = "❌ " + err.message; }
 };
 async function login(){
   KEY = $("pw").value; $("loginErr").textContent = "";
