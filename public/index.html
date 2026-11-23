@@ -233,17 +233,25 @@ async function submit(){
   }
 }
 function showDone(d){
-  const msg = `Namaste, maine order ${d.id} kiya hai (${rs(d.total)}).`;
+  const waUrl = `https://wa.me/${d.waTo}?text=${encodeURIComponent(d.waText)}`;
   for(const k in cart) delete cart[k];
   updateBar(); renderMenu();
   $("sheetBody").innerHTML = `<div class="done">
     <div class="big">🎉</div>
-    <h3 style="justify-content:center">Order mil gaya!</h3>
-    <p style="margin-top:8px">Aapka order number <b>${d.id}</b> hai.<br>Total: <b>${rs(d.total)}</b></p>
-    <p class="alt">${esc(SHOP.name)} jaldi aapko call ya WhatsApp karke confirm karegi.</p>
-    <a class="wa-sm" href="https://wa.me/91${SHOP.phone}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Bakery ko WhatsApp karein</a><br>
+    <h3 style="justify-content:center">Order save ho gaya!</h3>
+    <p style="margin-top:8px">Order number <b>${d.id}</b> · Total <b>${rs(d.total)}</b></p>
+    <p style="margin-top:14px;font-weight:600;color:var(--berry-d)">👇 Aakhri step: WhatsApp khulega, bas <u>Send</u> dabaiye</p>
+    <a class="wa" id="waGo" href="${waUrl}" target="_blank" rel="noopener" style="margin-top:12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>
+      WhatsApp pe Order Bhejein</a>
+    <p class="alt" id="waHint">WhatsApp khul raha hai…</p>
     <button class="copy" id="ok" style="margin-top:14px">Theek hai</button></div>`;
   $("ok").onclick = closeSheet;
+  // WhatsApp apne aap kholo (message pehle se likha hoga)
+  setTimeout(() => {
+    try { window.location.href = waUrl; } catch(_){}
+    setTimeout(() => { const h = $("waHint"); if(h) h.textContent = "WhatsApp nahi khula? Upar hara button dabaiye."; }, 2500);
+  }, 700);
 }
 function openSheet(){ renderSheet(); $("bg").classList.add("show"); $("sheet").classList.add("show"); }
 function closeSheet(){ save(); $("bg").classList.remove("show"); $("sheet").classList.remove("show"); }
